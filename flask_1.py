@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request
+import sqlite3 as lite
+import sys
 import requests
 app = Flask(__name__)
 
@@ -46,15 +48,48 @@ def city_form():
             if sal_from != None: salary_from.append(sal_from)
             if sal_to != None: salary_to.append(sal_to)
 
-    mid_sal_from = round(sum(salary_from) / len(salary_from))
-    mid_sal_to = round(sum(salary_to) / len(salary_to))
+    mid_sal_from = int(sum(salary_from) / len(salary_from))
+    mid_sal_to = int(sum(salary_to) / len(salary_to))
 
 
     data = {'city': city,
             'prof': prof,
             'salary_from': mid_sal_from,
             'salary_to': mid_sal_to}
+
+    connect = None
+    connect = lite.connect('test.db')
+    with connect:
+        cur = connect.cursor()
+        #cur.execute("CREATE TABLE hh(city TEXT, prof TEXT, sallary_from INT, sallary_to INT)")
+        cur.execute("INSERT INTO hh VALUES(?,?,?,?)", (data['city'], data['prof'], data['salary_from'], data['salary_to']))
+        #connect.close()
     return render_template('city_form.html', data=data)
+
+@app.route('/hands_to_db')
+def hands_to_db():
+    return render_template('hands_to_db.html')
+
+@app.route('/hands_to_db_rec', methods=['POST'])
+def hands_to_db_rec():
+    city = request.form['city']
+    prof = request.form['prof']
+    salary_from = request.form['salary_from']
+    salary_to = request.form['salary_to']
+    data = {'city': city,
+            'prof': prof,
+            'salary_from': salary_from,
+            'salary_to': salary_to}
+
+    connect = None
+    connect = lite.connect('test.db')
+    with connect:
+        cur = connect.cursor()
+        #cur.execute("CREATE TABLE hhotelka(city TEXT, prof TEXT, sallary_from INT, sallary_to INT)")
+        cur.execute("INSERT INTO hhotelka VALUES(?,?,?,?)", (city, prof, salary_from, salary_to))
+        # connect.close()
+    return render_template('hands_to_db_rec.html', data = data)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
